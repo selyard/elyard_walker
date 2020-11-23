@@ -1,7 +1,25 @@
-/** @file walker.cpp
- * @brief Simple C&C for rover; move forward until obstacle, then turn.
- * @copyright Copyright 2020 Spencer Elyard
- */
+/**
+* @file walker.cpp
+* @brief Simple C&C for rover; move forward until obstacle, then turn.
+* @copyright Copyright 2020, Spencer Elyard [MIT License]
+*
+*Permission is hereby granted, free of charge, to any person obtaining a
+*copy of this software and associated documentation files (the "Software"),
+*to deal in the Software without restriction, including without limitation
+*the rights to use, copy, modify, merge, publish, distribute, sublicense,
+*and/or sell copies of the Software, and to permit persons to whom the
+*Software is furnished to do so, subject to the following conditions:
+*
+*The above copyright notice and this permission notice shall be included
+*in all copies or substantial portions of the Software.
+*THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+*OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+*FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+*THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+* FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+* DEALINGS IN THE SOFTWARE.
+*/
 
 #include <cmath>
 #include <iostream>
@@ -11,20 +29,45 @@
 #include "sensor_msgs/LaserScan.h"
 #include "geometry_msgs/Twist.h"
 
-// Class describing the Walker algorithm
+/**
+* @brief Class describing the Walker algorithm
+*/
 class WalkerAlgorithm {
  public:
+  // Store range data
   std::vector<float> ranges;
+  // Store current command
   geometry_msgs::Twist cmd;
 
+  /**
+  *@brief Tell the algorithm to continue straight
+  */
   void continueStraight();
+  /**
+  * @brief Tell the algorithm to avoid an obstacle (turn right)
+  */
   void avoidObstacle();
+  /**
+  * @brief Tell the algorithm hold its position
+  */
   void holdPos();
-
+  /**
+  * @brief Get the stored command from the WalkerAlgorithm
+  * @return gemoetry_msgs::Twist command
+  */
   geometry_msgs::Twist getCMD();
-
+  /**
+  * @brief Get the list of ranges from the ROS subscription
+  * @param scan_input Input from ROS Subscriber
+  */
   void getAllRanges(const sensor_msgs::LaserScan::ConstPtr& scan_input);
-  int safeToProcede(int numIntervals, double min_range);
+  /**
+  * @brief Check if safe to proceed
+  * @param numIntervals Number of intervals of the range to check for obstacles
+  * @param min_rage Minimum allowable range before attempting to avoid obstacles
+  * @return int (-1) if invalid; (0) if blocked; (1) if safe
+  */
+  int safeToProceed(int numIntervals, double min_range);
 };
 
 void WalkerAlgorithm::continueStraight() {
@@ -63,7 +106,7 @@ void WalkerAlgorithm::getAllRanges(const sensor_msgs::LaserScan::ConstPtr&
     this->ranges = scan_input->ranges;
 }
 
-int WalkerAlgorithm::safeToProcede(int numIntervals, double min_range) {
+int WalkerAlgorithm::safeToProceed(int numIntervals, double min_range) {
   bool isSafe = 1;
   // if ranges does not yet have values
   if (ranges.size() == 0) {
@@ -85,11 +128,15 @@ int WalkerAlgorithm::safeToProcede(int numIntervals, double min_range) {
   return isSafe;
 }
 
+/**
+* @brief Main script
+*/
 int main(int argc, char **argv) {
   // create object with Walker algorithm
   WalkerAlgorithm walker;
-
+  // initiate ROS
   ros::init(argc, argv, "walker_script");
+  // defie node
   ros::NodeHandle n;
 
   // Base publisher on the topic that the teleoperation program publishes
@@ -102,7 +149,7 @@ int main(int argc, char **argv) {
   // Publish a geometry_msgs::Twist variable to "/cmd_vel"
   ros::Publisher pub_cmd = n.advertise<geometry_msgs::Twist>("/cmd_vel", 1000);
 
-  // get frequency parameter
+  // get frequency parameter from launch script
   int desired_freq;
   const std::string FREQ_SET_NAME = "freq_set";
   // set frequency or deefault+warn if not set
@@ -114,7 +161,7 @@ int main(int argc, char **argv) {
     }
   ros::Rate loop_rate(desired_freq);
 
-  // get sensor angles detect obstacles
+  // get sensor angles to detect obstacles from launch script
   // work on sensor intervals instead of set angle values
   int avoidance_angles;
   const std::string AVOID_ANGLES_SET = "avoid_angles_set";
@@ -126,7 +173,7 @@ int main(int argc, char **argv) {
     avoidance_angles = 10;
     }
 
-  // get range to obstacles to avoid
+  // get range to obstacles to avoid from launch script
   double min_avoidance_distance;
   const std::string MIN_AVOID_DISTANCE = "min_avoid_distance";
   // set frequency or deefault+warn if not set
@@ -137,24 +184,26 @@ int main(int argc, char **argv) {
     min_avoidance_distance = 1.;
   }
 
+  // loop while ROS is OK
   while (ros::ok()) {
     // check if path forward is clear
-    int ableToProcede = walker.safeToProcede(avoidance_angles,
+    int ableToProceed = walker.safeToProceed(avoidance_angles,
       min_avoidance_distance);
 
-    // if path forward clear, then procede forward
-    if (ableToProcede == 1) {
+    // if path forward clear, then proceed forward
+    if (ableToProceed == 1) {
       walker.continueStraight();
-    } else if (ableToProcede == 0) {
+    } else if (ableToProceed == 0) {
     // otherwise, turn right until clear
       walker.avoidObstacle();
     } else {
     // if invalid, wait until invalid
       walker.holdPos();
     }
-
+    // publish command
     pub_cmd.publish(walker.getCMD());
     ros::spinOnce();
+    // sleep until next loop
     loop_rate.sleep();
   }
 }
