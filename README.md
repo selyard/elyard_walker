@@ -30,15 +30,15 @@ roslaunch elyard_walker walker_demo.launch
 
 There are several argument options for the launch file:
 * Walker Algorithm:
- * freq:=(integer) defines a frequency of output messages; defaults to 30hz
- * rec:=true records a 30-second ROSbag; defaults to false. Recording is saved in ~/.ros/ directory.
- * avoid_angles:=(integer) define a number of rangefinder sensor intervals to avoid for collision avoidance - for the burger model, 1 interval is roughly 1 degree. This is plus/minus value from center. Defaults to 10.
- * min_dist:=(double) defines how close the robot can get to an obstacle before turning to avoid; defaults to 0.75.
+  * freq:=(integer) defines a frequency of output messages; defaults to 30hz
+  * rec:=true records a 30-second ROSbag; defaults to false. Recording is saved in ~/.ros/ directory.
+  * avoid_angles:=(integer) define a number of rangefinder sensor intervals to avoid for collision avoidance - for the burger model, 1 interval is roughly 1 degree. This is plus/minus value from center. Defaults to 10.
+  * min_dist:=(double) defines how close the robot can get to an obstacle before turning to avoid; defaults to 0.75.
 * Gazebo Parameters
- * model:=(string) defines the rover model; defaults to "burger".
- * x_pos:=(double) defines the starting X position; defaults to (-2.0)
- * y_pos:=(double) defines the starting Y position; defaults to (0.0)
- * z_pos:=(double) defines the starting Z position; defaults to (0.0)
+  * model:=(string) defines the rover model; defaults to "burger".
+  * x_pos:=(double) defines the starting X position; defaults to (-2.0)
+  * y_pos:=(double) defines the starting Y position; defaults to (0.0)
+  * z_pos:=(double) defines the starting Z position; defaults to (0.0)
 
 ### To Run Sections Individually
 
