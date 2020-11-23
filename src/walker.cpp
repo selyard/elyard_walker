@@ -1,28 +1,30 @@
 /** @file walker.cpp
  * @brief Simple C&C for rover; move forward until obstacle, then turn.
+ * @copyright Copyright 2020 Spencer Elyard
  */
+
+#include <cmath>
+#include <iostream>
 
 #include "ros/ros.h"
 #include "std_msgs/String.h"
 #include "sensor_msgs/LaserScan.h"
 #include "geometry_msgs/Twist.h"
-#include <cmath>
-#include <iostream>
 
 // Class describing the Walker algorithm
 class WalkerAlgorithm {
-  public:
-    std::vector<float> ranges;
-    geometry_msgs::Twist cmd;
+ public:
+  std::vector<float> ranges;
+  geometry_msgs::Twist cmd;
 
-    void continueStraight();
-    void avoidObstacle();
-    void holdPos();
+  void continueStraight();
+  void avoidObstacle();
+  void holdPos();
 
-    geometry_msgs::Twist getCMD();
+  geometry_msgs::Twist getCMD();
 
-    void getAllRanges(const sensor_msgs::LaserScan::ConstPtr& scan_input);
-    int safeToProcede(int numIntervals, double min_range);
+  void getAllRanges(const sensor_msgs::LaserScan::ConstPtr& scan_input);
+  int safeToProcede(int numIntervals, double min_range);
 };
 
 void WalkerAlgorithm::continueStraight() {
@@ -56,8 +58,9 @@ geometry_msgs::Twist WalkerAlgorithm::getCMD() {
   return this->cmd;
 }
 
-void WalkerAlgorithm::getAllRanges(const sensor_msgs::LaserScan::ConstPtr& scan_input) {
-  this->ranges = scan_input->ranges;
+void WalkerAlgorithm::getAllRanges(const sensor_msgs::LaserScan::ConstPtr&
+  scan_input) {
+    this->ranges = scan_input->ranges;
 }
 
 int WalkerAlgorithm::safeToProcede(int numIntervals, double min_range) {
@@ -67,13 +70,13 @@ int WalkerAlgorithm::safeToProcede(int numIntervals, double min_range) {
     isSafe = -1;
   } else {
     // if ranges to the right of center are blocked
-    for(int i=0; i <= numIntervals; i++) {
+    for (int i=0; i <= numIntervals; i++) {
       if (ranges.at(i) <= min_range) {
         isSafe = 0;
       }
     }
     // if ranges to the left of center are blocked
-    for(int i=(ranges.size()-1); i >= (ranges.size() - numIntervals); i--) {
+    for (int i=(ranges.size()-1); i >= (ranges.size() - numIntervals); i--) {
       if (ranges.at(i) <= min_range) {
         isSafe = 0;
       }
@@ -83,7 +86,7 @@ int WalkerAlgorithm::safeToProcede(int numIntervals, double min_range) {
 }
 
 int main(int argc, char **argv) {
-
+  // create object with Walker algorithm
   WalkerAlgorithm walker;
 
   ros::init(argc, argv, "walker_script");
@@ -94,7 +97,8 @@ int main(int argc, char **argv) {
 
   // Subscribe to "scan" output from Gazebo simulation to return info
   // regarding nearby obstacles
-  ros::Subscriber sub_scan = n.subscribe("/scan", 1000, &WalkerAlgorithm::getAllRanges, &walker);
+  ros::Subscriber sub_scan = n.subscribe("/scan", 1000,
+    &WalkerAlgorithm::getAllRanges, &walker);
   // Publish a geometry_msgs::Twist variable to "/cmd_vel"
   ros::Publisher pub_cmd = n.advertise<geometry_msgs::Twist>("/cmd_vel", 1000);
 
@@ -133,12 +137,10 @@ int main(int argc, char **argv) {
     min_avoidance_distance = 1.;
   }
 
-  // Mark if able to procede forward.
-  bool ableToProcede = true;
-
-  while(ros::ok()) {
+  while (ros::ok()) {
     // check if path forward is clear
-    int ableToProcede = walker.safeToProcede(avoidance_angles, min_avoidance_distance);
+    int ableToProcede = walker.safeToProcede(avoidance_angles,
+      min_avoidance_distance);
 
     // if path forward clear, then procede forward
     if (ableToProcede == 1) {
