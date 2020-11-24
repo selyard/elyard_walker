@@ -24,6 +24,8 @@ cd ~/catkin_ws && catkin_make
 
 Parts of the code for this launch file was copied from the "turtlebot3_gazebo turtlebot3_world.launch" file included in the Turtlebot3 Simulation git source. It was modified to decrease the time before the rover encountered an obstacle.
 
+This code could conceivably work in any Gazebo world; however, it was only tested on this specified world. This world contains an outside barrier preventing the robot from traveling into infinity, as well as a series of pillars which serve as obstacles to avoid.
+
 ```bash
 roslaunch elyard_walker walker_demo.launch
 ```
@@ -39,6 +41,24 @@ There are several argument options for the launch file:
   * x_pos:=(double) defines the starting X position; defaults to (-2.0)
   * y_pos:=(double) defines the starting Y position; defaults to (0.0)
   * z_pos:=(double) defines the starting Z position; defaults to (0.0)
+
+### Working with Recorded Bag File
+
+The recorded bag file is stored in thedefault ~/.ros/ directory. To inspect the pre-recorded bagfile provided, starting from the install directory
+```bash
+cd results
+rosbag info output_bag.bag
+```
+
+To play back the recorded bagfile, ROScore needs to be running as well.
+```bash
+roscore
+```
+Once this is running, from the install directory:
+```bash
+cd results
+rosbag play output_bag.bag
+```
 
 ### To Run Sections Individually
 
@@ -58,6 +78,7 @@ roslaunch turtlebot3_teleop turtlebot3_teleop_key.launch
 To run the walker script instead, in a separate terminal, run:
 ```bash
 rosrun elyard_walker walker_script
+```
 
 ### Other Notes
 
@@ -71,7 +92,5 @@ CPPCheck and CPPLint checked and passed. To run the scripts, navigate to the ins
 chmod +x check_cppcheck.sh check_cpplint.sh
 ./check_cppcheck.sh
 ./check_cpplint.sh
-
-
 ```
 
